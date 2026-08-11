@@ -1,0 +1,88 @@
+
+#(C) 2026 by FIZ Karlsruhe - Leibniz Institute for Information Infrastructure.  All rights reserved.
+data_211011-ICSD
+_database_code_ICSD 211011
+_audit_creation_date 2025-08-01
+_chemical_name_common 'Iridium dioxide'
+_chemical_formula_structural 'Ir O2'
+_chemical_formula_sum 'Ir1 O2'
+_chemical_name_structure_type TiO2-[tP6]
+_exptl_crystal_density_diffrn 11.73
+_citation_title
+
+;
+Optimizing acidic oxygen evolution reaction via modulation doping in Van der
+Waals layered iridium oxide
+;
+_publ_section_comment 'Cell and Type only determined'
+loop_
+_citation_id
+_citation_journal_full
+_citation_year
+_citation_journal_volume
+_citation_page_first
+_citation_page_last
+_citation_journal_id_ASTM
+primary 'Angewandte Chemie, International Edition' 2025 64 1 9 ACIEF5
+loop_
+_citation_author_citation_id
+_citation_author_name
+primary 'Ke, Jia'
+primary 'Zhu, Wenxiang'
+primary 'Ji, Yujin'
+primary 'Chen, Jinxin'
+primary 'Li, Chenchen'
+primary 'Wang, Yue'
+primary 'Wang, Qun'
+primary 'Huang, Weiâ€�Hsiang'
+primary 'Hu, Zhiwei'
+primary 'Li, Youyong'
+primary 'Shao, Qi'
+primary 'Lu, Jianmei'
+_cell_length_a 4.49
+_cell_length_b 4.49
+_cell_length_c 3.15
+_cell_angle_alpha 90.
+_cell_angle_beta 90.
+_cell_angle_gamma 90.
+_cell_volume 63.5
+_cell_formula_units_Z 2
+_space_group_name_H-M_alt 'P 42/m n m'
+_space_group_IT_number 136
+loop_
+_space_group_symop_id
+_space_group_symop_operation_xyz
+1 '-y+1/2, x+1/2, -z+1/2'
+2 'y+1/2, -x+1/2, -z+1/2'
+3 'y, x, -z'
+4 '-y, -x, -z'
+5 'y+1/2, -x+1/2, z+1/2'
+6 '-y+1/2, x+1/2, z+1/2'
+7 '-y, -x, z'
+8 'y, x, z'
+9 'x+1/2, -y+1/2, -z+1/2'
+10 '-x+1/2, y+1/2, -z+1/2'
+11 'x, y, -z'
+12 '-x, -y, -z'
+13 '-x+1/2, y+1/2, z+1/2'
+14 'x+1/2, -y+1/2, z+1/2'
+15 '-x, -y, z'
+16 'x, y, z'
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Ir4+ 4
+O2- -2
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_B_iso_or_equiv
+_atom_site_occupancy
+Ir1 Ir4+ 2 a 0 0 0 . 1.
+O1 O2- 4 f 0.311 0.311 0 . 1.
+#End of TTdata_211011-ICSD
