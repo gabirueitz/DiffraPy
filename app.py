@@ -22,7 +22,7 @@ st.set_page_config(
 )
 
 st.title("🔬 DiffraPy")
-st.caption("Processador e Plotador de Difração de Raios X")
+st.caption("Processador e Plotador de Difração de Raios X - Padrão de Publicação")
 st.markdown("---")
 
 # Paletas pré-definidas para artigos
@@ -145,8 +145,9 @@ def ler_arquivo_drx(file):
 
 
 def ler_cif(file, anodo="CuKa"):
+    """Converte .cif em picos 2theta, Intensidade e extrai planos (hkl)."""
     if not HAS_PYMATGEN:
-        st.error("Biblioteca 'pymatgen' não encontrada. Instale via terminal: pip install pymatgen")
+        st.error("Biblioteca 'pymatgen' não encontrada.")
         return None
 
     conteudo = file.getvalue().decode("utf-8", errors="ignore")
@@ -162,9 +163,21 @@ def ler_cif(file, anodo="CuKa"):
             
     padrao = calculadora.get_pattern(estrutura)
     
+    # Extrai o plano hkl principal de cada pico
+    hkl_labels = []
+    for hkls in padrao.hkls:
+        if hkls and len(hkls) > 0:
+            hkl_tuple = hkls[0]['hkl']
+            # Formata como (hkl) sem vírgulas: ex (111) ou (200)
+            hkl_str = f"({hkl_tuple[0]}{hkl_tuple[1]}{hkl_tuple[2]})"
+        else:
+            hkl_str = ""
+        hkl_labels.append(hkl_str)
+    
     return pd.DataFrame({
         '2theta': padrao.x,
-        'Intensidade': padrao.y
+        'Intensidade': padrao.y,
+        'hkl': hkl_labels
     })
 
 # -----------------------------------------------------------------------------
@@ -305,11 +318,25 @@ if arquivos_amostras:
 
             cor_f = st.color_picker(f"Cor da Fase {n+1}", value="#E74C3C" if n==0 else "#3498DB", key=f"c_f_{n}")
             
+            # Opções de hkl para fichas CIF
+            exibir_hkl = st.checkbox("Exibir Índices (hkl) nos Picos", value=False, key=f"chk_hkl_{n}")
+            corte_hkl = 10.0
+            tamanho_fonte_hkl = 8
+            if exibir_hkl:
+                col_c1, col_c2 = st.columns(2)
+                with col_c1:
+                    corte_hkl = st.number_input("I Mínima (%)", value=10.0, step=5.0, key=f"corte_hkl_{n}")
+                with col_c2:
+                    tamanho_fonte_hkl = st.number_input("Tamanho hkl", value=8, step=1, key=f"font_hkl_{n}")
+
             if file_f is not None:
                 dados_fichas.append({
                     "file": file_f,
                     "nome": nome_fase,
-                    "cor": cor_f
+                    "cor": cor_f,
+                    "exibir_hkl": exibir_hkl,
+                    "corte_hkl": corte_hkl,
+                    "font_hkl": tamanho_fonte_hkl
                 })
 
     # Área Central: Gerador do Gráfico
@@ -397,12 +424,32 @@ if arquivos_amostras:
                         color=item_f["cor"], 
                         edgecolor=item_f["cor"]
                     )
-                
-                ax_ficha.set_ylim(0, df_f['Intensidade'].max() * 1.15)
+
+                    # Plot dos Índices de Miller (hkl) se habilitado
+                    if item_f["exibir_hkl"] and "hkl" in df_f.columns:
+                        i_max = df_f['Intensidade'].max()
+                        for _, row in df_f.iterrows():
+                            # Filtra pela intensidade mínima escolhida
+                            if (row['Intensidade'] / i_max * 100) >= item_f["corte_hkl"] and row['hkl']:
+                                # Apenas insere o rótulo se estiver dentro dos limites de 2θ visíveis
+                                if not usar_limites or (x_min <= row['2theta'] <= x_max):
+                                    ax_ficha.text(
+                                        row['2theta'], 
+                                        row['Intensidade'] + (i_max * 0.05), 
+                                        row['hkl'], 
+                                        ha='center', 
+                                        va='bottom', 
+                                        fontsize=item_f["font_hkl"], 
+                                        rotation=90, 
+                                        color=item_f["cor"]
+                                    )
+
+                max_y = df_f['Intensidade'].max() * (1.45 if item_f["exibir_hkl"] else 1.15)
+                ax_ficha.set_ylim(0, max_y)
                 ax_ficha.set_yticks([])
                 
                 ax_ficha.text(
-                    0.98, 0.82, 
+                    0.98, 0.85, 
                     item_f["nome"], 
                     transform=ax_ficha.transAxes, 
                     fontsize=font_legend, 
