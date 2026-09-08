@@ -36,6 +36,9 @@ st.title("DiffraPy")
 st.caption("Processador, Plotador e Analisador Estrutural de Difração de Raios X - Padrão de Publicação")
 st.markdown("---")
 
+if not HAS_PYMATGEN:
+    st.warning("⚠️ O pacote `pymatgen` não foi detectado no ambiente Python atual. Para habilitar o suporte completo a arquivos `.cif`, certifique-se de que o Streamlit Cloud esteja configurado para rodar com Python 3.11 ou 3.12 nas configurações do app.")
+
 # Paletas pré-definidas para artigos
 PALETAS_PREDEFINIDAS = {
     "Nature / Scientific": ["#1B3B6F", "#2A9D8F", "#E76F51", "#264653", "#F4A261", "#A8201A", "#14213D", "#6B705C"],
@@ -157,36 +160,39 @@ def ler_arquivo_drx(file):
 
 def ler_cif(file, anodo="CuKa"):
     if not HAS_PYMATGEN:
-        st.error("Biblioteca 'pymatgen' não encontrada.")
         return None
 
-    conteudo = file.getvalue().decode("utf-8", errors="ignore")
-    estrutura = Structure.from_str(conteudo, fmt="cif")
-    
     try:
-        calculadora = XRDCalculator(wavelength=anodo)
-    except TypeError:
+        conteudo = file.getvalue().decode("utf-8", errors="ignore")
+        estrutura = Structure.from_str(conteudo, fmt="cif")
+        
         try:
-            calculadora = XRDCalculator(radiation=anodo)
+            calculadora = XRDCalculator(wavelength=anodo)
         except TypeError:
-            calculadora = XRDCalculator()
-            
-    padrao = calculadora.get_pattern(estrutura)
-    
-    hkl_labels = []
-    for hkls in padrao.hkls:
-        if hkls and len(hkls) > 0:
-            hkl_tuple = hkls[0]['hkl']
-            hkl_str = f"({hkl_tuple[0]}{hkl_tuple[1]}{hkl_tuple[2]})"
-        else:
-            hkl_str = ""
-        hkl_labels.append(hkl_str)
-    
-    return pd.DataFrame({
-        '2theta': padrao.x,
-        'Intensidade': padrao.y,
-        'hkl': hkl_labels
-    })
+            try:
+                calculadora = XRDCalculator(radiation=anodo)
+            except TypeError:
+                calculadora = XRDCalculator()
+                
+        padrao = calculadora.get_pattern(estrutura)
+        
+        hkl_labels = []
+        for hkls in padrao.hkls:
+            if hkls and len(hkls) > 0:
+                hkl_tuple = hkls[0]['hkl']
+                hkl_str = f"({hkl_tuple[0]}{hkl_tuple[1]}{hkl_tuple[2]})"
+            else:
+                hkl_str = ""
+            hkl_labels.append(hkl_str)
+        
+        return pd.DataFrame({
+            '2theta': padrao.x,
+            'Intensidade': padrao.y,
+            'hkl': hkl_labels
+        })
+    except Exception as e:
+        st.error(f"Erro ao converter arquivo CIF: {e}")
+        return None
 
 
 def auto_detectar_picos_df(df, min_prominence_ratio=0.05, distance_pts=15):
@@ -283,11 +289,9 @@ arquivos_amostras = st.sidebar.file_uploader(
 st.sidebar.markdown("---")
 st.sidebar.header("💾 Gerenciador de Projetos")
 with st.sidebar.expander("Salvar / Carregar Projeto (.json)"):
-    # Botão para salvar projeto
     if st.button("💾 Exportar Estado do Projeto", use_container_width=True):
         estado_exportar = {}
         for key, val in st.session_state.items():
-            # Filtra objetos não serializáveis em JSON
             if not callable(val) and not hasattr(val, "read"):
                 estado_exportar[key] = val
         
@@ -300,7 +304,6 @@ with st.sidebar.expander("Salvar / Carregar Projeto (.json)"):
             use_container_width=True
         )
 
-    # File uploader para carregar projeto
     proj_uploaded = st.file_uploader("Carregar Projeto Salvo (.json)", type=["json"], key="uploader_projeto_json")
     if proj_uploaded is not None:
         try:
@@ -573,19 +576,22 @@ if arquivos_amostras:
                                                 color=item_f["cor"]
                                             )
 
-                        fator_topo = item_f["margem_topo"] if item_f["exibir_hkl"] else 1.15
-                        ax_ficha.set_ylim(0, df_f['Intensidade'].max() * fator_topo)
-                        ax_ficha.set_yticks([])
-                        
-                        ax_ficha.text(
-                            0.98, 0.88, 
-                            item_f["nome"], 
-                            transform=ax_ficha.transAxes, 
-                            fontsize=font_legend, 
-                            verticalalignment='top', 
-                            horizontalalignment='right',
-                            bbox=dict(boxstyle='square,pad=0.3', facecolor='white', edgecolor='none', alpha=0.8)
-                        )
+                            fator_topo = item_f["margem_topo"] if item_f["exibir_hkl"] else 1.15
+                            ax_ficha.set_ylim(0, df_f['Intensidade'].max() * fator_topo)
+                            ax_ficha.set_yticks([])
+                            
+                            ax_ficha.text(
+                                0.98, 0.88, 
+                                item_f["nome"], 
+                                transform=ax_ficha.transAxes, 
+                                fontsize=font_legend, 
+                                verticalalignment='top', 
+                                horizontalalignment='right',
+                                bbox=dict(boxstyle='square,pad=0.3', facecolor='white', edgecolor='none', alpha=0.8)
+                            )
+                        else:
+                            if extensao == "cif" and not HAS_PYMATGEN:
+                                ax_ficha.text(0.5, 0.5, "CIF requer pymatgen (defina Python 3.11 ou 3.12 no Streamlit Cloud)", ha='center', va='center', color='gray')
                     except Exception as e:
                         st.error(f"Erro ao ler ficha {item_f['nome']}: {e}")
 
@@ -737,7 +743,7 @@ if arquivos_amostras:
                 col_d2.metric("Variação Interplanar (Δd/d₀)", f"{delta_d_perc:+.2f}%", f"d = {res_pico['d_spacing']:.4f} Å vs d₀ = {d_cif:.4f} Å")
 
     # -------------------------------------------------------------------------
-    # ABA 3: MÚLTIPLOS PICOS, MÉDIA & WILLIAMSON-HALL (COM EXPORTAÇÃO DA TABELA)
+    # ABA 3: MÚLTIPLOS PICOS, MÉDIA & WILLIAMSON-HALL
     # -------------------------------------------------------------------------
     with tab_multi_picos:
         st.header("Análise Avançada de Picos: Média de Scherrer & Williamson-Hall")
@@ -838,7 +844,6 @@ if arquivos_amostras:
 
                 df_filtrado = df_editado[df_editado["Usar"] == True]
 
-                # Exportação da Tabela da 3ª Aba
                 col_exp_t1, col_exp_t2 = st.columns(2)
                 with col_exp_t1:
                     csv_tab3 = df_editado.to_csv(index=False).encode('utf-8')
