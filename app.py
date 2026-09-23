@@ -33,7 +33,7 @@ st.set_page_config(
 )
 
 st.title("DiffraPy")
-st.caption("Processador, Plotador e Analisador Estrutural de Difração de Raios X - Padrão de Publicação")
+st.caption("Processador, Plotador e Analisador Estrutural de Difração de Raios X")
 st.markdown("---")
 
 if not HAS_PYMATGEN:
@@ -340,7 +340,7 @@ with col_btn_x:
     if st.button("🔤", key="btn_modal_x", help="Inserir símbolos"):
         modal_simbolos("label_x_input")
 
-label_eixo_y = st.sidebar.text_input("Rótulo Eixo Y", value="Intensidade (a.u.)")
+label_eixo_y = st.sidebar.text_input("Rótulo Eixo Y", value="Intensity (a.u.)")
 
 st.sidebar.markdown("---")
 st.sidebar.header("🎨 4. Estilo, Fontes & Legenda")
