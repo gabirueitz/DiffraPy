@@ -4,4 +4,8 @@ scipy
 pandas
 matplotlib
 xlsxwriter
+<<<<<<< HEAD
 pymatgen
+=======
+pymatgen
+>>>>>>> 99949271962db2e658f714fd71ed3b96bbec3ce2
